@@ -863,4 +863,34 @@ describe('injector', function() {
       }).toThrowMatching(/\[\$injector:unpr] Unknown provider: name/);
     });
   });
+
+  describe('tagging', function(){
+
+    it('should retrieve a list if no service has that tag', function(){
+      var tagged;
+      providers('usetags', function(friends) {tagged = friends;}, {$inject: ['+friends']});
+      injector.get('usetags');
+      expect(tagged).toEqual([]);
+    });
+
+    it('should retrieve a list of all tagged services', function(){
+      providers('+friends', function(){ return 'mike'})
+      providers('+friends', function(){ return 'rob'})
+
+      expect(injector.get('+friends')).toContain('mike');
+      expect(injector.get('+friends')).toContain('rob');
+      expect(injector.get('+friends').length).toBe(2);
+    });
+
+    it('lets tagged services also have dependencies', function(){
+      providers('afriend', function(){ return 'james'})
+
+      providers('+friends', function(name){ return name}, {$inject: ['afriend']})
+      providers('+friends', function(){ return 'rob'})
+
+      expect(injector.get('+friends')).toContain('james');
+      expect(injector.get('+friends')).toContain('rob');
+      expect(injector.get('+friends').length).toBe(2);
+    })
+  });
 });

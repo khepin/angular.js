@@ -640,6 +640,21 @@ function createInjector(modulesToLoad) {
     };
   }
 
+  function createTaggedProvider() {
+    var ret = {
+      tagged: [],
+      $get: function($injector) {
+        var services = []
+        for (var i = 0; i <this.tagged.length; i++) {
+          services.push($injector.invoke(this.tagged[i].$get, this.tagged[i]))
+        };
+        return services;
+      },
+      $inject: ['$injector']
+    }
+    return ret
+  }
+
   function provider(name, provider_) {
     assertNotHasOwnProperty(name, 'service');
     if (isFunction(provider_) || isArray(provider_)) {
@@ -648,7 +663,15 @@ function createInjector(modulesToLoad) {
     if (!provider_.$get) {
       throw $injectorMinErr('pget', "Provider '{0}' must define $get factory method.", name);
     }
-    return providerCache[name + providerSuffix] = provider_;
+    if (name.charAt(0) === '+') {
+      if (!providerCache[name + providerSuffix]) {
+        providerCache[name + providerSuffix] = createTaggedProvider()
+      }
+      providerCache[name + providerSuffix].tagged.push(provider_)
+      return provider_
+    } else {
+      return providerCache[name + providerSuffix] = provider_;
+    }
   }
 
   function factory(name, factoryFn) { return provider(name, { $get: factoryFn }); }
@@ -743,6 +766,10 @@ function createInjector(modulesToLoad) {
         } catch (err) {
           if (cache[serviceName] === INSTANTIATING) {
             delete cache[serviceName];
+          }
+          if (serviceName.charAt(0) === '+') {
+            cache[serviceName] = [];
+            return cache[serviceName];
           }
           throw err;
         } finally {
