@@ -186,6 +186,8 @@ function setupModuleLoader(window) {
            */
           constant: invokeLater('$provide', 'constant', 'unshift'),
 
+          tag: invokeLater('$provide', 'tag'),
+
           /**
            * @ngdoc method
            * @name angular.Module#animation

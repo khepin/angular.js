@@ -863,4 +863,25 @@ describe('injector', function() {
       }).toThrowMatching(/\[\$injector:unpr] Unknown provider: name/);
     });
   });
+
+  describe('tagging', function(){
+
+    it('should retrieve a list of all tagged services', function(){
+
+      var $injector = createInjector([function($provide){
+        $provide.factory('friend1', function(){ return 'mike'})
+        $provide.factory('friend2', function(){ return 'rob'})
+        $provide.factory('friendList', ['friends', function(list){
+          return list;
+        }])
+
+        $provide.tag('friend1', 'friends')
+        $provide.tag('friend2', 'friends')
+      }]);
+
+      expect($injector.get('friendList')).toContain('mike');
+      expect($injector.get('friendList')).toContain('rob');
+      expect($injector.get('friendList').length).toBe(2);
+    });
+  });
 });

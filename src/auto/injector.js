@@ -607,7 +607,8 @@ function createInjector(modulesToLoad) {
             service: supportObject(service),
             value: supportObject(value),
             constant: supportObject(constant),
-            decorator: decorator
+            decorator: decorator,
+            tag: tag
           }
       },
       providerInjector = (providerCache.$injector =
@@ -638,6 +639,28 @@ function createInjector(modulesToLoad) {
         return delegate(key, value);
       }
     };
+  }
+
+  function createTaggedProvider() {
+    var ret = {
+      tagged: [],
+      $get: function($injector) {
+        var services = []
+        for (var i = 0; i < this.tagged.length; i++) {
+          services.push($injector.get(this.tagged[i]))
+        };
+        return services;
+      },
+      $inject: ['$injector']
+    }
+    return ret
+  }
+
+  function tag(name, tagName) {
+    if (!providerCache[tagName + providerSuffix]) {
+      providerCache[tagName + providerSuffix] = provider(tagName, createTaggedProvider());
+    }
+    providerCache[tagName + providerSuffix].tagged.push(name);
   }
 
   function provider(name, provider_) {
